@@ -1460,6 +1460,7 @@ class Graph_constructor(object):
         Dtemp = D + np.eye(N) * np.amax(D)
 
         mD = np.amin(Dtemp, 0)
+        mD = mD.reshape(1,N)
         mD = np.abs(np.tile(mD, (N, 1)) + np.tile(np.transpose(mD), (1, N))) / 2
         mD *= self.hydrophobic_RMST_gamma
 
@@ -1504,7 +1505,7 @@ class Graph_constructor(object):
         mstidx = np.full(shape=1, fill_value=0)
         otheridx = np.arange(1, N, 1)
 
-        T = D[0, otheridx]
+        T = D[[0], [otheridx]]
         P = np.zeros((np.size(T)))
 
         while T.size > 0:
@@ -1532,8 +1533,7 @@ class Graph_constructor(object):
 
             # As a node is added clear his entries
             P = np.delete(P, i)
-            T = np.delete(T, i)
-
+            T = np.delete(T, i, 1)
             # Add the node to the list
             mstidx = np.append(mstidx, idx)
 
@@ -1541,8 +1541,7 @@ class Graph_constructor(object):
             otheridx = np.delete(otheridx, i)
 
             # update the distance matrix
-            Ttemp = D[idx, otheridx]
-
+            Ttemp = D[[idx], [otheridx]]
             if len(T) > 0:
                 idxless = (Ttemp < T).nonzero()
                 T[idxless] = Ttemp[idxless]
@@ -1740,12 +1739,9 @@ class Graph_constructor(object):
                 for id2 in id_list2:
                     K2, R2 = get_atom_specific_parameters(self.protein.atoms[id2].name)
 
-                    z = np.asscalar(
-                        np.linalg.norm(
+                    z = np.linalg.norm(
                             self.protein.atoms[id1].xyz - self.protein.atoms[id2].xyz
-                        )
-                        / (2.0 * np.sqrt(R1 * R2))
-                    )
+                        ) / (2.0 * np.sqrt(R1 * R2))
                     vdw += (
                         # (-self.k_factor * 4.184 / 6.022)
                         -1
@@ -1951,7 +1947,7 @@ def in_same_residue(atom1, atom2):
 
 
 def distance_between_two_atoms(atom1, atom2):
-    return np.round(np.asscalar(np.linalg.norm(atom1.xyz - atom2.xyz)), capping_decimals)
+    return np.round(np.linalg.norm(atom1.xyz - atom2.xyz), capping_decimals)
 
 
 def equilibrium_distance(atom1, atom2):
